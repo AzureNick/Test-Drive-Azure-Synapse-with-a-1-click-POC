@@ -523,7 +523,7 @@
 					},
 					"KeyVaultName": {
 						"type": "string",
-						"defaultValue": "conktovskdzc75xepocws1p1"
+						"defaultValue": "kvconktovskdzc75xepoc"
 					},
 					"datalakeAccountName": {
 						"type": "string",
@@ -1316,7 +1316,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "80d94c9e-f161-4d03-a3e4-7a7b3dd13320"
+						"spark.autotune.trackingId": "992f3a32-d798-432b-8df3-0a5a842610de"
 					}
 				},
 				"metadata": {
