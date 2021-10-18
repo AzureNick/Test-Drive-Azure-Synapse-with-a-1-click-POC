@@ -519,15 +519,15 @@
 					},
 					"SQLLoginUsername": {
 						"type": "string",
-						"defaultValue": "<sql-login-username>"
+						"defaultValue": "nicksalc"
 					},
 					"KeyVaultName": {
 						"type": "string",
-						"defaultValue": "<keyvaukt-name>"
+						"defaultValue": "conktovskdzc75xepocws1p1"
 					},
 					"datalakeAccountName": {
 						"type": "string",
-						"defaultValue": "<datalake-account-name>"
+						"defaultValue": "conktovskdzc75xepoc"
 					}
 				},
 				"folder": {
@@ -1316,7 +1316,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "1583bf8c-43bb-4b57-a9e9-317211ab3154"
+						"spark.autotune.trackingId": "80d94c9e-f161-4d03-a3e4-7a7b3dd13320"
 					}
 				},
 				"metadata": {
