@@ -5,14 +5,8 @@
 		"workspaceName": {
 			"value": "conktovskdzc75xepocws1"
 		},
-		"conktovskdzc75xepocws1-WorkspaceDefaultSqlServer_connectionString": {
-			"value": ""
-		},
 		"TripFaresSynapseAnalyticsLinkedService_connectionString": {
 			"value": ""
-		},
-		"conktovskdzc75xepocws1-WorkspaceDefaultStorage_properties_typeProperties_url": {
-			"value": "https://conktovskdzc75xepoc.dfs.core.windows.net/"
 		},
 		"HttpServerTripDataLinkedService_properties_typeProperties_url": {
 			"value": "https://raw.githubusercontent.com/Azure/Test-Drive-Azure-Synapse-with-a-1-click-POC/main/tripDataAndFaresCSV/trip-data.csv"
@@ -20,11 +14,29 @@
 		"HttpServerTripFareDataLinkedService_properties_typeProperties_url": {
 			"value": "https://raw.githubusercontent.com/Azure/Test-Drive-Azure-Synapse-with-a-1-click-POC/main/tripDataAndFaresCSV/fares-data.csv"
 		},
+		"TripFaresDataLakeStorageLinkedService_properties_typeProperties_url": {
+			"value": "@{concat('https://',linkedService().datalakeAccountName,'.dfs.core.windows.net')}"
+		},
 		"keyVaultLinkedservice_properties_typeProperties_baseUrl": {
 			"value": "@{concat('https://',linkedService().keyVaultName,'.vault.azure.net/')}"
 		},
-		"TripFaresDataLakeStorageLinkedService_properties_typeProperties_url": {
-			"value": "@{concat('https://',linkedService().datalakeAccountName,'.dfs.core.windows.net')}"
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_SchemaName": {
+			"value": "tripFares"
+		},
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName": {
+			"value": "conktovskdzc75xepocws1.database.windows.net"
+		},
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName": {
+			"value": "conktovskdzc75xepocws1p1"
+		},
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername": {
+			"value": "nicksalc"
+		},
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_KeyVaultName": {
+			"value": "kvconktovskdzc75xepoc"
+		},
+		"15MinTrigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName": {
+			"value": "conktovskdzc75xepoc"
 		}
 	}
 }
