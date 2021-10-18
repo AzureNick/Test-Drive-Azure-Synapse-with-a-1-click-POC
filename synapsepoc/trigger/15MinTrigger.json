@@ -1,0 +1,32 @@
+{
+	"name": "15MinTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "TripFaresDataPipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"SchemaName": "tripFares",
+					"SynapseWorkspaceName": "conktovskdzc75xepocws1.database.windows.net",
+					"SQLDedicatedPoolName": "conktovskdzc75xepocws1p1",
+					"SQLLoginUsername": "nicksalc",
+					"KeyVaultName": "kvconktovskdzc75xepoc",
+					"datalakeAccountName": "conktovskdzc75xepoc"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2021-10-18T23:43:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
