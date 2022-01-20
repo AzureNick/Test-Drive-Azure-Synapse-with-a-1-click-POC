@@ -3,11 +3,17 @@
 	"properties": {
 		"description": "Trigger every 15 minutes",
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
 					"referenceName": "Load Dataframe a bunch",
+					"type": "PipelineReference"
+				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "RunAggregationWithStats",
 					"type": "PipelineReference"
 				}
 			}
@@ -16,7 +22,7 @@
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 15,
+				"interval": 30,
 				"startTime": "2022-01-20T18:32:00Z",
 				"timeZone": "UTC"
 			}
