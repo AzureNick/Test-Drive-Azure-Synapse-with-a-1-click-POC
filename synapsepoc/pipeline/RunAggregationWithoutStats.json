@@ -1,5 +1,5 @@
 {
-	"name": "Run Data Movement Queries",
+	"name": "RunAggregationWithoutStats",
 	"properties": {
 		"activities": [
 			{
