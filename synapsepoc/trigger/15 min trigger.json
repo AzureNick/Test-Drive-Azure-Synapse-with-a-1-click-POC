@@ -22,14 +22,23 @@
 					"referenceName": "RunAggregationWithoutStats",
 					"type": "PipelineReference"
 				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "TripFaresDataPipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"SchemaName": "tripFares"
+				}
 			}
 		],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 30,
-				"startTime": "2022-01-20T18:32:00Z",
+				"interval": 15,
+				"startTime": "2022-01-20T11:39:00Z",
 				"timeZone": "UTC"
 			}
 		}
