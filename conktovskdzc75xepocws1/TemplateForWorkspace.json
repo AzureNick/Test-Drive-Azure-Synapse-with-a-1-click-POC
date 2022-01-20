@@ -26,6 +26,30 @@
 		"keyVaultLinkedservice_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "@{concat('https://',linkedService().keyVaultName,'.vault.azure.net/')}"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_SchemaName": {
+			"type": "string",
+			"defaultValue": "tripFares"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName": {
+			"type": "string",
+			"defaultValue": "conktovskdzc75xepocws1.database.windows.net"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName": {
+			"type": "string",
+			"defaultValue": "conktovskdzc75xepocws1p1"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername": {
+			"type": "string",
+			"defaultValue": "nicksalc"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_KeyVaultName": {
+			"type": "string",
+			"defaultValue": "kvconktovskdzc75xepoc"
+		},
+		"15 min trigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName": {
+			"type": "string",
+			"defaultValue": "conktovskdzc75xepoc"
 		}
 	},
 	"variables": {
@@ -77,6 +101,46 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/notebooks/MultipleLoadDataFrame')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/RunAggregationWithStats')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "AggregateTripFaresData_withStats",
+						"type": "SqlPoolStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"sqlPool": {
+							"referenceName": "conktovskdzc75xepocws1p1",
+							"type": "SqlPoolReference"
+						},
+						"typeProperties": {
+							"storedProcedureName": "[dbo].[AggregateDuplicatedTripFareData_withStats]"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "Generate SQL Pool Workload"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sqlPools/conktovskdzc75xepocws1p1')]"
 			]
 		},
 		{
@@ -1302,7 +1366,7 @@
 			"properties": {
 				"description": "Trigger every 15 minutes",
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -1310,6 +1374,34 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "RunAggregationWithStats",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "RunAggregationWithoutStats",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "TripFaresDataPipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"SchemaName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SchemaName')]",
+							"SynapseWorkspaceName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName')]",
+							"SQLDedicatedPoolName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName')]",
+							"SQLLoginUsername": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername')]",
+							"KeyVaultName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_KeyVaultName')]",
+							"datalakeAccountName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -1317,13 +1409,16 @@
 					"recurrence": {
 						"frequency": "Minute",
 						"interval": 15,
-						"startTime": "2022-01-20T18:32:00Z",
+						"startTime": "2022-01-20T11:39:00Z",
 						"timeZone": "UTC"
 					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/Load Dataframe a bunch')]"
+				"[concat(variables('workspaceId'), '/pipelines/Load Dataframe a bunch')]",
+				"[concat(variables('workspaceId'), '/pipelines/RunAggregationWithStats')]",
+				"[concat(variables('workspaceId'), '/pipelines/RunAggregationWithoutStats')]",
+				"[concat(variables('workspaceId'), '/pipelines/TripFaresDataPipeline')]"
 			]
 		},
 		{
@@ -1461,6 +1556,26 @@
 			"properties": {
 				"content": {
 					"query": "CREATE PROCEDURE AggregateDuplicatedTripFareData_withStats\nAS\n    --increase data size then run an aggregation. Trying to trigger some data movement while we are at it\n    --at DW100 this took about __ minutes to run\n\n    --Make the data bigger in TempDB\n    CREATE TABLE #DuplicatedFares\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM FaresData\n    )\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    SELECT COUNT(*) FROM #DuplicatedFares\n\nCREATE STATISTICS fare_amount ON #DuplicatedFares (fare_amount); \nCREATE STATISTICS hack_license ON #DuplicatedFares (hack_license); \nCREATE STATISTICS medallion ON #DuplicatedFares (medallion); \nCREATE STATISTICS mta_tax ON #DuplicatedFares (mta_tax); \nCREATE STATISTICS payment_type ON #DuplicatedFares (payment_type); \nCREATE STATISTICS pickup_datetime ON #DuplicatedFares (pickup_datetime); \nCREATE STATISTICS surcharge ON #DuplicatedFares (surcharge); \nCREATE STATISTICS tip_amount ON #DuplicatedFares (tip_amount); \nCREATE STATISTICS tolls_amount ON #DuplicatedFares (tolls_amount); \nCREATE STATISTICS total_amount ON #DuplicatedFares (total_amount); \nCREATE STATISTICS vendor_id ON #DuplicatedFares (vendor_id);\n\n\n    CREATE TABLE #DuplicatedTrips\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM TripsData\n    )\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    SELECT COUNT(*) FROM #DuplicatedTrips\n\n    CREATE STATISTICS dropoff_datetime ON #DuplicatedTrips (dropoff_datetime); \n    CREATE STATISTICS medallion ON #DuplicatedTrips (medallion); \n    CREATE STATISTICS hack_license ON #DuplicatedTrips (hack_license); \n\n    --Aggregate fares by passenger count\n    SELECT count(T.Medallion) as Number_Trips,\n    sum(convert(DECIMAL(16,4), F.fare_amount)) AS FareAmount,\n    convert(INT, T.passenger_count) AS PassengerCount,\n    avg(convert(DECIMAL(16,4), F.fare_amount)) AS AvgFare\n    FROM #DuplicatedTrips T\n    JOIN #DuplicatedFares F \n    on T.medallion = F.medallion\n    AND t.pickup_datetime = f.pickup_datetime\n    GROUP BY T.passenger_count\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "conktovskdzc75xepocws1p1",
+						"poolName": "conktovskdzc75xepocws1p1"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT * FROM sys.dm_pdw_exec_requests\nwhere status not in ('completed','cancelled','failed')\nORDER BY total_elapsed_time",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1830,7 +1945,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "86d61dec-ef16-44b3-be87-d19b28bd2407"
+						"spark.autotune.trackingId": "464fdf56-e9fd-4088-8999-f58711560769"
 					}
 				},
 				"metadata": {
@@ -1855,10 +1970,8 @@
 						"sparkVersion": "2.4",
 						"nodeCount": 5,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
-					},
-					"sessionKeepAliveTimeout": 30
+						"memory": 28
+					}
 				},
 				"cells": [
 					{
@@ -2171,46 +2284,6 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/RunAggregationWithStats')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"activities": [
-					{
-						"name": "AggregateTripFaresData_withStats",
-						"type": "SqlPoolStoredProcedure",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"sqlPool": {
-							"referenceName": "conktovskdzc75xepocws1p1",
-							"type": "SqlPoolReference"
-						},
-						"typeProperties": {
-							"storedProcedureName": "[dbo].[AggregateDuplicatedTripFareData_withStats]"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"folder": {
-					"name": "Generate SQL Pool Workload"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/sqlPools/conktovskdzc75xepocws1p1')]"
-			]
 		}
 	]
 }
