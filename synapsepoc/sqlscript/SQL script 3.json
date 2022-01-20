@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 3",
+	"properties": {
+		"content": {
+			"query": "CREATE PROCEDURE AggregateDuplicatedTripFareData_noStats\nAS\n    --increase data size then run an aggregation. Trying to trigger some data movement while we are at it\n    --at DW100 this took about 12 minutes to run\n\n    --Make the data bigger in TempDB\n    CREATE TABLE #DuplicatedFares\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM FaresData\n    )\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    SELECT COUNT(*) FROM #DuplicatedFares\n\n    CREATE TABLE #DuplicatedTrips\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM TripsData\n    )\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    SELECT COUNT(*) FROM #DuplicatedTrips\n\n    --Aggregate fares by passenger count\n    SELECT count(T.Medallion) as Number_Trips,\n    sum(convert(DECIMAL(16,4), F.fare_amount)) AS FareAmount,\n    convert(INT, T.passenger_count) AS PassengerCount,\n    avg(convert(DECIMAL(16,4), F.fare_amount)) AS AvgFare\n    FROM #DuplicatedTrips T\n    JOIN #DuplicatedFares F \n    on T.medallion = F.medallion\n    AND t.pickup_datetime = f.pickup_datetime\n    GROUP BY T.passenger_count\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "conktovskdzc75xepocws1p1",
+				"poolName": "conktovskdzc75xepocws1p1"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
