@@ -16,6 +16,12 @@
 					"referenceName": "RunAggregationWithStats",
 					"type": "PipelineReference"
 				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "RunAggregationWithoutStats",
+					"type": "PipelineReference"
+				}
 			}
 		],
 		"type": "ScheduleTrigger",
