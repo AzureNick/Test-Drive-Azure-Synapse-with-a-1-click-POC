@@ -1,9 +1,9 @@
 {
-	"name": "Run Data Movement Queries",
+	"name": "Run Data Movement Queries_copy1",
 	"properties": {
 		"activities": [
 			{
-				"name": "AggregateTripFaresData_noStats",
+				"name": "AggregateTripFaresData_withStats",
 				"type": "SqlPoolStoredProcedure",
 				"dependsOn": [],
 				"policy": {
@@ -19,7 +19,7 @@
 					"type": "SqlPoolReference"
 				},
 				"typeProperties": {
-					"storedProcedureName": "[dbo].[AggregateDuplicatedTripFareData_noStats]"
+					"storedProcedureName": "[dbo].[AggregateDuplicatedTripFareData_withStats]"
 				}
 			}
 		],
