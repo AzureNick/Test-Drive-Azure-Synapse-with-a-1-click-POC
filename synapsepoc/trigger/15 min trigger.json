@@ -1,0 +1,25 @@
+{
+	"name": "15 min trigger",
+	"properties": {
+		"description": "Trigger every 15 minutes",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Load Dataframe a bunch",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2022-01-20T18:32:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
