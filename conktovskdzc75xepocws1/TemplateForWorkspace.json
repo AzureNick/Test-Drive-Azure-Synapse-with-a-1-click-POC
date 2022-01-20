@@ -33,6 +33,93 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('workspaceName'), '/ws1sparkpool1')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Load Dataframe a bunch')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "Just to generate a little load for monitoring",
+				"activities": [
+					{
+						"name": "Notebook 1",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "MultipleLoadDataFrame",
+								"type": "NotebookReference"
+							},
+							"snapshot": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/MultipleLoadDataFrame')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Run Data Movement Queries')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "RunDataMovementSP",
+						"type": "SqlPoolStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"sqlPool": {
+							"referenceName": "conktovskdzc75xepocws1p1",
+							"type": "SqlPoolReference"
+						},
+						"typeProperties": {
+							"storedProcedureName": "[dbo].[AggregateDuplicatedTripFareData_noStats]"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "Generate SQL Pool Workload"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sqlPools/conktovskdzc75xepocws1p1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/TripFaresDataPipeline')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -1209,6 +1296,37 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/15 min trigger')]",
+			"type": "Microsoft.Synapse/workspaces/triggers",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "Trigger every 15 minutes",
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Load Dataframe a bunch",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 15,
+						"startTime": "2022-01-20T18:32:00Z",
+						"timeZone": "UTC"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/pipelines/Load Dataframe a bunch')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -1220,7 +1338,8 @@
 						"dataFlowProperties": {
 							"computeType": "General",
 							"coreCount": 8,
-							"timeToLive": 0
+							"timeToLive": 0,
+							"cleanup": true
 						}
 					}
 				},
@@ -1308,6 +1427,46 @@
 					"currentConnection": {
 						"databaseName": "master",
 						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE PROCEDURE AggregateDuplicatedTripFareData_noStats\nAS\n    --increase data size then run an aggregation. Trying to trigger some data movement while we are at it\n    --at DW100 this took about 12 minutes to run\n\n    --Make the data bigger in TempDB\n    CREATE TABLE #DuplicatedFares\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM FaresData\n    )\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    SELECT COUNT(*) FROM #DuplicatedFares\n\n    CREATE TABLE #DuplicatedTrips\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM TripsData\n    )\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    SELECT COUNT(*) FROM #DuplicatedTrips\n\n    --Aggregate fares by passenger count\n    SELECT count(T.Medallion) as Number_Trips,\n    sum(convert(DECIMAL(16,4), F.fare_amount)) AS FareAmount,\n    convert(INT, T.passenger_count) AS PassengerCount,\n    avg(convert(DECIMAL(16,4), F.fare_amount)) AS AvgFare\n    FROM #DuplicatedTrips T\n    JOIN #DuplicatedFares F \n    on T.medallion = F.medallion\n    AND t.pickup_datetime = f.pickup_datetime\n    GROUP BY T.passenger_count\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "conktovskdzc75xepocws1p1",
+						"poolName": "conktovskdzc75xepocws1p1"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT * FROM sys.databases\n\nCREATE PROCEDURE AggregateDuplicatedTripFareData_withStats\nAS\n    --increase data size then run an aggregation. Trying to trigger some data movement while we are at it\n    --at DW100 this took about __ minutes to run\n\n    --Make the data bigger in TempDB\n    CREATE TABLE #DuplicatedFares\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM FaresData\n    )\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    --INSERT INTO #DuplicatedFares SELECT * FROM #DuplicatedFares\n    SELECT COUNT(*) FROM #DuplicatedFares\n\nCREATE STATISTICS fare_amount ON #DuplicatedFares (fare_amount); \nCREATE STATISTICS hack_license ON #DuplicatedFares (hack_license); \nCREATE STATISTICS medallion ON #DuplicatedFares (medallion); \nCREATE STATISTICS mta_tax ON #DuplicatedFares (mta_tax); \nCREATE STATISTICS payment_type ON #DuplicatedFares (payment_type); \nCREATE STATISTICS pickup_datetime ON #DuplicatedFares (pickup_datetime); \nCREATE STATISTICS surcharge ON #DuplicatedFares (surcharge); \nCREATE STATISTICS tip_amount ON #DuplicatedFares (tip_amount); \nCREATE STATISTICS tolls_amount ON #DuplicatedFares (tolls_amount); \nCREATE STATISTICS total_amount ON #DuplicatedFares (total_amount); \nCREATE STATISTICS vendor_id ON #DuplicatedFares (vendor_id);\n\n\n    CREATE TABLE #DuplicatedTrips\n    WITH (Distribution = ROUND_ROBIN, HEAP)\n    AS\n    (\n        SELECT * FROM TripsData\n    )\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    INSERT INTO #DuplicatedTrips SELECT * FROM #DuplicatedTrips\n    SELECT COUNT(*) FROM #DuplicatedTrips\n\n    --Aggregate fares by passenger count\n    SELECT count(T.Medallion) as Number_Trips,\n    sum(convert(DECIMAL(16,4), F.fare_amount)) AS FareAmount,\n    convert(INT, T.passenger_count) AS PassengerCount,\n    avg(convert(DECIMAL(16,4), F.fare_amount)) AS AvgFare\n    FROM #DuplicatedTrips T\n    JOIN #DuplicatedFares F \n    on T.medallion = F.medallion\n    AND t.pickup_datetime = f.pickup_datetime\n    GROUP BY T.passenger_count\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "conktovskdzc75xepocws1p1",
+						"poolName": "conktovskdzc75xepocws1p1"
 					},
 					"resultLimit": 5000
 				},
@@ -1651,26 +1810,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/conktovskdzc75xepocws1p1')]",
-			"type": "Microsoft.Synapse/workspaces/sqlPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"collation": "SQL_Latin1_General_CP1_CI_AS",
-				"maxSizeBytes": 263882790666240,
-				"annotations": []
-			},
-			"dependsOn": [],
-			"location": "westus"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/default')]",
-			"type": "Microsoft.Synapse/workspaces/managedVirtualNetworks",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/Notebook 1')]",
+			"name": "[concat(parameters('workspaceName'), '/MultipleLoadDataFrame')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1690,7 +1830,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "908427f1-187a-480d-8b11-c49b9853c6f4"
+						"spark.autotune.trackingId": "464fdf56-e9fd-4088-8999-f58711560769"
 					}
 				},
 				"metadata": {
@@ -1715,10 +1855,8 @@
 						"sparkVersion": "2.4",
 						"nodeCount": 5,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
-					},
-					"sessionKeepAliveTimeout": 30
+						"memory": 28
+					}
 				},
 				"cells": [
 					{
@@ -2014,82 +2152,23 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/ws1sparkpool1')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"name": "[concat(parameters('workspaceName'), '/conktovskdzc75xepocws1p1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"collation": "SQL_Latin1_General_CP1_CI_AS",
+				"maxSizeBytes": 263882790666240,
 				"annotations": []
 			},
+			"dependsOn": [],
+			"location": "westus"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/default')]",
+			"type": "Microsoft.Synapse/workspaces/managedVirtualNetworks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/Load Dataframe a bunch')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "Just to generate a little load for monitoring",
-				"activities": [
-					{
-						"name": "Notebook 1",
-						"type": "SynapseNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebook": {
-								"referenceName": "Notebook 1",
-								"type": "NotebookReference"
-							},
-							"snapshot": true
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/Notebook 1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/15 min trigger')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "Trigger every 15 minutes",
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Load Dataframe a bunch",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 15,
-						"startTime": "2022-01-20T18:32:00Z",
-						"timeZone": "UTC"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/Load Dataframe a bunch')]"
-			]
 		}
 	]
 }
