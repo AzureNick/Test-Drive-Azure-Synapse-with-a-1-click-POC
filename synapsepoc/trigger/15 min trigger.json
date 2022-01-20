@@ -29,7 +29,12 @@
 					"type": "PipelineReference"
 				},
 				"parameters": {
-					"SchemaName": "tripFares"
+					"SchemaName": "tripFares",
+					"SynapseWorkspaceName": "conktovskdzc75xepocws1.database.windows.net",
+					"SQLDedicatedPoolName": "conktovskdzc75xepocws1p1",
+					"SQLLoginUsername": "nicksalc",
+					"KeyVaultName": "kvconktovskdzc75xepoc",
+					"datalakeAccountName": "conktovskdzc75xepoc"
 				}
 			}
 		],
