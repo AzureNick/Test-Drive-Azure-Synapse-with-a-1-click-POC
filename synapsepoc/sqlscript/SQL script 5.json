@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 5",
+	"properties": {
+		"content": {
+			"query": "SELECT * FROM sys.dm_pdw_exec_requests\nwhere status not in ('completed','cancelled','failed')\nORDER BY total_elapsed_time",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "conktovskdzc75xepocws1p1",
+				"poolName": "conktovskdzc75xepocws1p1"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
