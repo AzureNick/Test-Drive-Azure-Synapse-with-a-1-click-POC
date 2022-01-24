@@ -4,22 +4,7 @@
 		"description": "Trigger every 15 minutes",
 		"annotations": [],
 		"runtimeState": "Stopped",
-		"pipelines": [
-			{
-				"pipelineReference": {
-					"referenceName": "TripFaresDataPipeline",
-					"type": "PipelineReference"
-				},
-				"parameters": {
-					"SchemaName": "tripFares",
-					"SynapseWorkspaceName": "conktovskdzc75xepocws1.database.windows.net",
-					"SQLDedicatedPoolName": "conktovskdzc75xepocws1p1",
-					"SQLLoginUsername": "nicksalc",
-					"KeyVaultName": "kvconktovskdzc75xepoc",
-					"datalakeAccountName": "conktovskdzc75xepoc"
-				}
-			}
-		],
+		"pipelines": [],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
