@@ -13,12 +13,6 @@
 			},
 			{
 				"pipelineReference": {
-					"referenceName": "RunAggregationWithoutStats",
-					"type": "PipelineReference"
-				}
-			},
-			{
-				"pipelineReference": {
 					"referenceName": "TripFaresDataPipeline",
 					"type": "PipelineReference"
 				},
