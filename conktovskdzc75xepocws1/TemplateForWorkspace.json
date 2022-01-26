@@ -26,45 +26,12 @@
 		"keyVaultLinkedservice_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "@{concat('https://',linkedService().keyVaultName,'.vault.azure.net/')}"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SchemaName": {
-			"type": "string",
-			"defaultValue": "tripFares"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName": {
-			"type": "string",
-			"defaultValue": "conktovskdzc75xepocws1.database.windows.net"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName": {
-			"type": "string",
-			"defaultValue": "conktovskdzc75xepocws1p1"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername": {
-			"type": "string",
-			"defaultValue": "nicksalc"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_KeyVaultName": {
-			"type": "string",
-			"defaultValue": "kvconktovskdzc75xepoc"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName": {
-			"type": "string",
-			"defaultValue": "conktovskdzc75xepoc"
 		}
 	},
 	"variables": {
 		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
 	},
 	"resources": [
-		{
-			"name": "[concat(parameters('workspaceName'), '/ws1sparkpool1')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": []
-			},
-			"dependsOn": []
-		},
 		{
 			"name": "[concat(parameters('workspaceName'), '/Load Dataframe a bunch')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
@@ -1360,68 +1327,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/15 min trigger')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "Trigger every 15 minutes",
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Load Dataframe a bunch",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
-							"referenceName": "RunAggregationWithStats",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
-							"referenceName": "RunAggregationWithoutStats",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
-							"referenceName": "TripFaresDataPipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"SchemaName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SchemaName')]",
-							"SynapseWorkspaceName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName')]",
-							"SQLDedicatedPoolName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName')]",
-							"SQLLoginUsername": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername')]",
-							"KeyVaultName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_KeyVaultName')]",
-							"datalakeAccountName": "[parameters('15 min trigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 15,
-						"startTime": "2022-01-20T11:39:00Z",
-						"timeZone": "UTC"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/Load Dataframe a bunch')]",
-				"[concat(variables('workspaceId'), '/pipelines/RunAggregationWithStats')]",
-				"[concat(variables('workspaceId'), '/pipelines/RunAggregationWithoutStats')]",
-				"[concat(variables('workspaceId'), '/pipelines/TripFaresDataPipeline')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -1945,7 +1850,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "464fdf56-e9fd-4088-8999-f58711560769"
+						"spark.autotune.trackingId": "78ab1119-16c8-44ce-8b60-4546aa9d379e"
 					}
 				},
 				"metadata": {
@@ -1970,8 +1875,10 @@
 						"sparkVersion": "2.4",
 						"nodeCount": 5,
 						"cores": 4,
-						"memory": 28
-					}
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
@@ -2283,6 +2190,15 @@
 			"type": "Microsoft.Synapse/workspaces/managedVirtualNetworks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ws1sparkpool1')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
 			"dependsOn": []
 		}
 	]

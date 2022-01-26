@@ -19,24 +19,6 @@
 		},
 		"keyVaultLinkedservice_properties_typeProperties_baseUrl": {
 			"value": "@{concat('https://',linkedService().keyVaultName,'.vault.azure.net/')}"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SchemaName": {
-			"value": "tripFares"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SynapseWorkspaceName": {
-			"value": "conktovskdzc75xepocws1.database.windows.net"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLDedicatedPoolName": {
-			"value": "conktovskdzc75xepocws1p1"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_SQLLoginUsername": {
-			"value": "nicksalc"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_KeyVaultName": {
-			"value": "kvconktovskdzc75xepoc"
-		},
-		"15 min trigger_properties_TripFaresDataPipeline_parameters_datalakeAccountName": {
-			"value": "conktovskdzc75xepoc"
 		}
 	}
 }
