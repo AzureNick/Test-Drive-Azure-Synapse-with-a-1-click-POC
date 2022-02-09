@@ -118,9 +118,6 @@
 								},
 								"cases": [
 									{
-										"value": "Paused-Resume"
-									},
-									{
 										"value": "Online-Pause",
 										"activities": [
 											{
