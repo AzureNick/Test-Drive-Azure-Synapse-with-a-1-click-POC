@@ -71,6 +71,206 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/PauseSqlPool')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "GET List",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@concat('https://management.azure.com/subscriptions/',pipeline().parameters.SubscriptionID,'/resourceGroups/',pipeline().parameters.ResourceGroup,'/providers/Microsoft.Synapse/workspaces/',pipeline().parameters.WorkspaceName,'/sqlPools?api-version=2019-06-01-preview')",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "FilterProd",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "GET List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get list').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@not(endswith(item().name,'conktovskdzc75xepocws1'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach_Pool",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "FilterProd",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('FilterProd').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "CheckState",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"url": {
+											"value": "@concat('https://management.azure.com/subscriptions/',pipeline().parameters.SubscriptionID,'/resourceGroups/',pipeline().parameters.ResourceGroup,'/providers/Microsoft.Synapse/workspaces/',pipeline().parameters.WorkspaceName,'/sqlPools/',item().name,'?api-version=2019-06-01-preview')",
+											"type": "Expression"
+										},
+										"connectVia": {
+											"referenceName": "AutoResolveIntegrationRuntime",
+											"type": "IntegrationRuntimeReference"
+										},
+										"method": "GET",
+										"headers": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com/"
+										}
+									}
+								},
+								{
+									"name": "StatePauseOrResume",
+									"type": "Switch",
+									"dependsOn": [
+										{
+											"activity": "CheckState",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"on": {
+											"value": "@concat(activity('CheckState').output.properties.status,'-',pipeline().parameters.PauseOrResume)",
+											"type": "Expression"
+										},
+										"cases": [
+											{
+												"value": "Online-Pause",
+												"activities": [
+													{
+														"name": "SQLPoolPause",
+														"type": "WebActivity",
+														"dependsOn": [],
+														"policy": {
+															"timeout": "7.00:00:00",
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureOutput": false,
+															"secureInput": false
+														},
+														"userProperties": [],
+														"typeProperties": {
+															"url": {
+																"value": "@concat('https://management.azure.com/subscriptions/',pipeline().parameters.SubscriptionID,'/resourceGroups/',pipeline().parameters.ResourceGroup,'/providers/Microsoft.Synapse/workspaces/',pipeline().parameters.WorkspaceName,'/sqlPools/',activity('CheckState').output.name,'/pause?api-version=2019-06-01-preview')",
+																"type": "Expression"
+															},
+															"connectVia": {
+																"referenceName": "AutoResolveIntegrationRuntime",
+																"type": "IntegrationRuntimeReference"
+															},
+															"method": "POST",
+															"headers": {},
+															"body": "Pause and Resume",
+															"authentication": {
+																"type": "MSI",
+																"resource": "https://management.azure.com/"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"ResourceGroup": {
+						"type": "string",
+						"defaultValue": "ContosoProd"
+					},
+					"SubscriptionID": {
+						"type": "string",
+						"defaultValue": "9cd45dfd-d1ac-4c16-9363-150d2afcb462"
+					},
+					"WorkspaceName": {
+						"type": "string",
+						"defaultValue": "9cd45dfd-d1ac-4c16-9363-150d2afcb462"
+					},
+					"SQLPoolName": {
+						"type": "string",
+						"defaultValue": "conktovskdzc75xepocws1p1"
+					},
+					"PauseorResume": {
+						"type": "string",
+						"defaultValue": "Pause"
+					}
+				},
+				"folder": {
+					"name": "ResourceManagement"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/RunAggregationWithStats')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -1495,6 +1695,293 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/CatalystOptimizer')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "TIP"
+				},
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "ws1sparkpool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "4ad0c33c-b082-4b33-9648-3a1a7b0cf59d"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/9cd45dfd-d1ac-4c16-9363-150d2afcb462/resourceGroups/ContosoProd/providers/Microsoft.Synapse/workspaces/conktovskdzc75xepocws1/bigDataPools/ws1sparkpool1",
+						"name": "ws1sparkpool1",
+						"type": "Spark",
+						"endpoint": "https://conktovskdzc75xepocws1.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/ws1sparkpool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "2.4",
+						"nodeCount": 3,
+						"cores": 4,
+						"memory": 28
+					}
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"// val dfProduct = spark.read.synapsesql(\"dedicatedsqlpool.cso.DimProduct\")\r\n",
+							"// dfProduct.write.mode(\"overwrite\").format(\"delta\").save(\"/data/contoso/DimProduct/\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"// import org.apache.spark.sql.functions._\r\n",
+							"// val dfFactOnlineSales = spark.read.synapsesql(\"dedicatedsqlpool.cso.FactOnlineSales\")\r\n",
+							"// val dfFactOnlineSales1 = dfFactOnlineSales.withColumn(\"SaleYear\", year(dfFactOnlineSales(\"DateKey\")))\r\n",
+							"// dfFactOnlineSales1.write.mode(\"overwrite\").format(\"delta\").partitionBy(\"SaleYear\").save(\"/data/contoso/FactOnlineSales/\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"dfProduct = spark.read.format(\"delta\").load(\"/data/contoso/DimProduct/\")\r\n",
+							"dfProduct.createOrReplaceTempView(\"DimProduct\")\r\n",
+							"\r\n",
+							"dfFactOnlineSales = spark.read.format(\"delta\").load(\"/data/contoso/FactOnlineSales/\")\r\n",
+							"dfFactOnlineSales.createOrReplaceTempView(\"FactOnlineSales\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"dfJoinedSale = dfProduct.join(dfFactOnlineSales, dfProduct.ProductKey == dfFactOnlineSales.ProductKey) \r\n",
+							"dfJoinedSale = dfJoinedSale.filter(dfJoinedSale.SaleYear == 2009)\r\n",
+							"# display(dfJoinedSale)\r\n",
+							"\r\n",
+							"dfJoinedSale.explain() # only physical plan\r\n",
+							"# dfJoinedSale.explain(True) # all plans including logical and physical plan"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"dfAggregatedSale = dfJoinedSale.groupBy('BrandName').agg({'SalesAmount':'sum'})\r\n",
+							"\r\n",
+							"dfAggregatedSale.explain()\r\n",
+							"\r\n",
+							"# display(dfAggregatedSale)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"EXPLAIN\r\n",
+							"SELECT  SUM(f.SalesAmount) AS sales_by_brand_amount\r\n",
+							",       p.BrandName\r\n",
+							"FROM    FactOnlineSales AS f\r\n",
+							"JOIN    DimProduct      AS p ON f.ProductKey = p.ProductKey\r\n",
+							"GROUP BY p.BrandName"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"print(spark.conf.get(\"spark.sql.autoBroadcastJoinThreshold\")) # 26214400 - 26 MB\r\n",
+							"\r\n",
+							"# df1.join(broadcast(df2), Seq(\"id\")).explain #broadcast join hint"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Adaptive Query Execution https://spark.apache.org/docs/latest/sql-performance-tuning.html#adaptive-query-execution\r\n",
+							"print(spark.conf.get(\"spark.sql.adaptive.enabled\"))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"SELECT  SUM(f.SalesAmount) AS sales_by_brand_amount\r\n",
+							",       p.BrandName\r\n",
+							"FROM    FactOnlineSales AS f\r\n",
+							"JOIN    DimProduct      AS p ON f.ProductKey = p.ProductKey\r\n",
+							"GROUP BY p.BrandName"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Data Exploration and ML Modeling - NYC taxi predict using Spark MLlib')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
@@ -1830,6 +2317,2007 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/DeltaLake')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "TIP"
+				},
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "5d8b48f8-1716-49c6-b2bf-a67dcff075dd"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					}
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Notebook Configuration"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"print(spark.conf.get(\"spark.executor.instances\"))\r\n",
+							"print(spark.conf.get(\"spark.executor.cores\"))\r\n",
+							"print(spark.conf.get(\"spark.executor.memory\"))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"Note: If you request more number of vcores than  pool limit or available vcores in the pool, you will get an exception. Try reducing the numbers of vcores requested or increasing your pool size."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"%%configure -f \r\n",
+							"{\r\n",
+							"    \"numExecutors\": 4, \r\n",
+							"    \"executorCores\": 4,\r\n",
+							"    \"executorMemory\": \"28g\"\r\n",
+							"}"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"print(spark.conf.get(\"spark.executor.instances\"))\r\n",
+							"print(spark.conf.get(\"spark.executor.cores\"))\r\n",
+							"print(spark.conf.get(\"spark.executor.memory\"))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"https://docs.microsoft.com/en-us/azure/synapse-analytics/spark/apache-spark-autoscale#get-started"
+						]
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Prepare data"
+						]
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"from azureml.opendatasets import NycTlcYellow\r\n",
+							"\r\n",
+							"from datetime import datetime\r\n",
+							"from dateutil import parser\r\n",
+							"start_date = parser.parse('2010-01-01')\r\n",
+							"end_date = parser.parse('2010-02-28')\r\n",
+							"\r\n",
+							"nyc_tlc = NycTlcYellow(start_date=start_date, end_date=end_date)\r\n",
+							"nyc_tlc_df = nyc_tlc.to_spark_dataframe()\r\n",
+							"\r\n",
+							"# nyc_tlc_df_clean = nyc_tlc_df.drop_duplicates()\r\n",
+							"nyc_tlc_df_clean = nyc_tlc_df.drop_duplicates().repartition(32)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Converting Parquet to Delta"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"nyc_tlc_df_clean.write.mode(\"overwrite\").format(\"parquet\").save(\"/data/deltademo/parquettbl\")\r\n",
+							"nyc_tlc_df_clean.write.mode(\"overwrite\").format(\"parquet\").partitionBy(\"puYear\",\"puMonth\").save(\"/data/deltademo/partitionedparquettbl\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"# Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
+							"deltaTable = DeltaTable.convertToDelta(spark, \"parquet.`/data/deltademo/parquettbl`\")\r\n",
+							"\r\n",
+							"# Convert partitioned parquet table at path '<path-to-table>' and partitioned by columns with data type, separated by comma\r\n",
+							"partitionedDeltaTable = DeltaTable.convertToDelta(spark, \"parquet.`/data/deltademo/partitionedparquettbl`\", \"puYear int, puMonth int\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"-- Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
+							"CONVERT TO DELTA parquet.`/data/deltademo/parquettbl`;\r\n",
+							"\r\n",
+							"-- Convert partitioned Parquet table at path '<path-to-table>' and partitioned by columns with data type, separated by comma\r\n",
+							"CONVERT TO DELTA parquet.`/data/deltademo/partitionedparquettbl` PARTITIONED BY (puYear int, puMonth int);"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Working with Dataframe"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Creating managed delta tables\r\n",
+							"# nyc_tlc_df_clean.write.format(\"delta\").mode(\"overwrite\").saveAsTable(\"deltademo.deltataxitrips\")\r\n",
+							"# nyc_tlc_df_clean.write.mode(\"overwrite\").format(\"delta\").partitionBy(\"puYear\",\"puMonth\").saveAsTable(\"deltademo.deltapartitionedtaxitrips\")\r\n",
+							"\r\n",
+							"# Creating delta path/files\r\n",
+							"nyc_tlc_df_clean.write.mode(\"overwrite\").format(\"delta\").save(\"/data/deltademo/deltataxitrips\")\r\n",
+							"nyc_tlc_df_clean.write.mode(\"overwrite\").format(\"delta\").partitionBy(\"puYear\",\"puMonth\").save(\"/data/deltademo/deltapartitionedtaxitrips\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"DROP DATABASE IF EXISTS deltademo CASCADE;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.sql(\"CREATE DATABASE IF NOT EXISTS deltademo\")\r\n",
+							"spark.sql(\"CREATE TABLE IF NOT EXISTS deltademo.deltataxitrips USING DELTA LOCATION '{0}'\".format(\"/data/deltademo/deltataxitrips\")) \r\n",
+							"spark.sql(\"CREATE TABLE IF NOT EXISTS deltademo.deltapartitionedtaxitrips USING DELTA LOCATION '{0}'\".format(\"/data/deltademo/deltapartitionedtaxitrips\")) "
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"CREATE DATABASE IF NOT EXISTS deltademo;\r\n",
+							"\r\n",
+							"CREATE TABLE IF NOT EXISTS deltademo.deltataxitrips\r\n",
+							"USING DELTA\r\n",
+							"LOCATION '/data/deltademo/deltataxitrips';\r\n",
+							"\r\n",
+							"CREATE TABLE IF NOT EXISTS deltademo.deltapartitionedtaxitrips\r\n",
+							"USING DELTA\r\n",
+							"LOCATION '/data/deltademo/deltapartitionedtaxitrips';"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"DESCRIBE deltademo.deltataxitrips;\r\n",
+							"DESCRIBE DETAIL deltademo.deltataxitrips;\r\n",
+							"\r\n",
+							"DESCRIBE deltademo.deltapartitionedtaxitrips;\r\n",
+							"DESCRIBE DETAIL deltademo.deltapartitionedtaxitrips;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Data Merge"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"SELECT puYear, puMonth, count(*)\r\n",
+							"FROM deltademo.deltapartitionedtaxitrips \r\n",
+							"GROUP BY puYear, puMonth;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from azureml.opendatasets import NycTlcYellow\r\n",
+							"from datetime import datetime\r\n",
+							"from dateutil import parser\r\n",
+							"start_date = parser.parse('2010-02-01')\r\n",
+							"end_date = parser.parse('2010-03-31')\r\n",
+							"nyc_tlc_incr = NycTlcYellow(start_date=start_date, end_date=end_date)\r\n",
+							"nyc_tlc_incr_df = nyc_tlc_incr.to_spark_dataframe()\r\n",
+							"\r\n",
+							"nyc_tlc_incr_df_clean = nyc_tlc_incr_df.drop_duplicates().repartition(32)\r\n",
+							"nyc_tlc_incr_df_clean.createOrReplaceTempView(\"deltaincrementaltaxitrips\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"MERGE INTO deltademo.deltapartitionedtaxitrips target\r\n",
+							"USING deltaincrementaltaxitrips source\r\n",
+							"ON \r\n",
+							"  source.vendorID = target.vendorID AND source.tpepPickupDateTime = target.tpepPickupDateTime \r\n",
+							"  AND source.tpepDropoffDateTime = target.tpepDropoffDateTime AND source.startLat = target.startLat \r\n",
+							"  AND source.startLon = target.startLon AND source.endLat = target.endLat AND source.endLon = target.endLon \r\n",
+							"  AND source.passengerCount = target.passengerCount AND source.tripDistance = target.tripDistance \r\n",
+							"  AND source.rateCodeId = target.rateCodeId AND source.paymentType = target.paymentType \r\n",
+							"  AND source.totalAmount = target.totalAmount\r\n",
+							"  AND target.puYear IN (2010) AND target.puMonth IN (2,3) -- Partition Pruning \r\n",
+							"WHEN MATCHED THEN\r\n",
+							"  UPDATE SET \r\n",
+							"    target.puLocationId = source.puLocationId\r\n",
+							"    , target.doLocationId = source.doLocationId\r\n",
+							"    , target.storeAndFwdFlag = source.storeAndFwdFlag\r\n",
+							"    , target.fareAmount = source.fareAmount\r\n",
+							"    , target.extra = source.extra\r\n",
+							"    , target.mtaTax = source.mtaTax\r\n",
+							"    , target.improvementSurcharge = source.improvementSurcharge\r\n",
+							"    , target.tipAmount = source.tipAmount\r\n",
+							"    , target.tollsAmount = source.tollsAmount\r\n",
+							"WHEN NOT MATCHED\r\n",
+							"  THEN INSERT (\r\n",
+							"    target.vendorID, target.tpepPickupDateTime, target.tpepDropoffDateTime, target.passengerCount, target.tripDistance,\r\n",
+							"    target.puLocationId, target.doLocationId, target.startLon, target.startLat, target.endLon, target.endLat, target.rateCodeId,\r\n",
+							"    target.storeAndFwdFlag, target.paymentType, target.fareAmount, target.extra, target.mtaTax, target.improvementSurcharge, target.tipAmount,\r\n",
+							"    target.tollsAmount, target.totalAmount, target.puYear, target.puMonth)   \r\n",
+							" VALUES (\r\n",
+							"   source.vendorID, source.tpepPickupDateTime, source.tpepDropoffDateTime, source.passengerCount, source.tripDistance,\r\n",
+							"   source.puLocationId, source.doLocationId, source.startLon, source.startLat, source.endLon, source.endLat, source.rateCodeId, \r\n",
+							"   source.storeAndFwdFlag, source.paymentType, source.fareAmount, source.extra, source.mtaTax, source.improvementSurcharge, source.tipAmount, \r\n",
+							"   source.tollsAmount, source.totalAmount, source.puYear, source.puMonth)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"SELECT puYear, puMonth, count(*)\r\n",
+							"FROM deltademo.deltapartitionedtaxitrips \r\n",
+							"GROUP BY puYear, puMonth\r\n",
+							"ORDER BY puYear, puMonth;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# from delta.tables import *\r\n",
+							"\r\n",
+							"# deltaTable = DeltaTable.forPath(spark, \"/data/events/\")\r\n",
+							"\r\n",
+							"# deltaTable.alias(\"events\").merge(\r\n",
+							"#     updatesDF.alias(\"updates\"),\r\n",
+							"#     \"events.eventId = updates.eventId\") \\\r\n",
+							"#   .whenMatchedUpdate(set = { \"data\" : \"updates.data\" } ) \\\r\n",
+							"#   .whenNotMatchedInsert(values =\r\n",
+							"#     {\r\n",
+							"#       \"date\": \"updates.date\",\r\n",
+							"#       \"eventId\": \"updates.eventId\",\r\n",
+							"#       \"data\": \"updates.data\"\r\n",
+							"#     }\r\n",
+							"#   ) \\\r\n",
+							"#   .execute()"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Time Travel - History of changes"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"DELETE FROM deltademo.deltapartitionedtaxitrips\r\n",
+							"WHERE puYear = 2010 AND puMonth = 1;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"SELECT puYear, puMonth, count(*)\r\n",
+							"FROM deltademo.deltapartitionedtaxitrips \r\n",
+							"GROUP BY puYear, puMonth\r\n",
+							"ORDER BY puYear, puMonth;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"--DESCRIBE HISTORY deltademo.deltapartitionedtaxitrips; -- LIMIT 1;  -- get the last operation only\r\n",
+							"DESCRIBE HISTORY delta.`/data/deltademo/deltapartitionedtaxitrips`; "
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"deltapartitionedtaxitrips = DeltaTable.forPath(spark, '/data/deltademo/deltapartitionedtaxitrips')\r\n",
+							"display(deltapartitionedtaxitrips.history())"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"deltapartitionedtaxitrips = spark.read.format(\"delta\").option(\"versionAsOf\", 1).load(\"/data/deltademo/deltapartitionedtaxitrips\")  \r\n",
+							"display(deltapartitionedtaxitrips.groupBy(\"puYear\",\"puMonth\").count())"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"deltapartitionedtaxitrips = spark.read.format(\"delta\").option(\"timestampAsOf\", '2022-01-12 21:21:17.968').load(\"/data/deltademo/deltapartitionedtaxitrips\")  \r\n",
+							"display(deltapartitionedtaxitrips.groupBy(\"puYear\",\"puMonth\").count())"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## VACCUM - Maintaining history of past data"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"-- vacuum files not required by versions older than the default retention period\r\n",
+							"VACUUM deltademo.deltapartitionedtaxitrips;\r\n",
+							"\r\n",
+							"-- vacuum files in path-based table\r\n",
+							"VACUUM '/data/deltademo/deltapartitionedtaxitrips'; \r\n",
+							"VACUUM delta.`/data/deltademo/deltapartitionedtaxitrips`;\r\n",
+							"\r\n",
+							"-- vacuum files not required by versions more than 720 hours (30 days) old\r\n",
+							"VACUUM delta.`/data/deltademo/deltapartitionedtaxitrips` RETAIN 720 HOURS;\r\n",
+							"\r\n",
+							" -- do dry run to get the list of files to be deleted\r\n",
+							"VACUUM deltademo.deltapartitionedtaxitrips DRY RUN;"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"\r\n",
+							"deltaTable = DeltaTable.forPath(spark, '/data/deltademo/deltapartitionedtaxitrips')  # path-based tables, or\r\n",
+							"deltaTable = DeltaTable.forName(spark, 'deltademo.deltapartitionedtaxitrips')    # Hive metastore-based tables\r\n",
+							"\r\n",
+							"deltaTable.vacuum(720)     # vacuum files not required by versions more than 720 hours (30 days) old\r\n",
+							"\r\n",
+							"deltaTable.vacuum()        # vacuum files not required by versions older than the default retention period"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## File Compaction"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"path = \"/data/deltademo/deltapartitionedtaxitrips\"\r\n",
+							"partition = \"puYear = '2010' and puMonth = '3'\"\r\n",
+							"numFilesPerPartition = 16\r\n",
+							"\r\n",
+							"(spark.read\r\n",
+							" .format(\"delta\")\r\n",
+							" .load(path)\r\n",
+							" .where(partition)\r\n",
+							" .repartition(numFilesPerPartition)\r\n",
+							" .write\r\n",
+							" .option(\"dataChange\", \"false\")\r\n",
+							" .format(\"delta\")\r\n",
+							" .mode(\"overwrite\")\r\n",
+							" .option(\"replaceWhere\", partition)\r\n",
+							" .save(path))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Convert a Delta table to a Parquet table\r\n",
+							"\r\n",
+							"You can easily convert a Delta table back to a Parquet table using the following steps:\r\n",
+							"\r\n",
+							"If you have performed Delta Lake operations that can change the data files (for example, delete or merge), run vacuum with retention of 0 hours to delete all data files that do not belong to the latest version of the table.\r\n",
+							"Delete the _delta_log directory in the table directory.\r\n",
+							"\r\n",
+							"**NOTE: **Delta Lake has a safety check to prevent you from running a dangerous vacuum command. If you are certain that there are no operations being performed on this table that take longer than the retention interval you plan to specify, you can turn off this safety check by setting the Apache Spark configuration property spark.databricks.delta.retentionDurationCheck.enabled to false. You must choose an interval that is longer than the longest running concurrent transaction and the longest period that any stream can lag behind the most recent update to the table.\r\n",
+							"\r\n",
+							""
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"\r\n",
+							"deltaTable = DeltaTable.forPath(spark, '/data/deltademo/deltapartitionedtaxitrips')  # path-based tables, or\r\n",
+							"deltaTable = DeltaTable.forName(spark, 'deltademo.deltapartitionedtaxitrips')    # Hive metastore-based tables\r\n",
+							"\r\n",
+							"deltaTable.vacuum(0)        # vacuum files not required by versions older than the default retention period"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.conf.get(\"spark.databricks.delta.retentionDurationCheck.enabled\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.conf.set(\"spark.databricks.delta.retentionDurationCheck.enabled\", \"false\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DeltaLakeOptimize')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "TIP"
+				},
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b3d3395a-292c-4c61-8e26-73cf20cef253"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_spark",
+						"display_name": "scala"
+					},
+					"language_info": {
+						"name": "scala"
+					}
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Delta Lake OPTIMIZE"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": true
+						},
+						"source": [
+							"val sessionId = scala.util.Random.nextInt(1000000)\r\n",
+							"val dataPath = s\"/deltaoptimizetest/data-$sessionId\";\r\n",
+							"\r\n",
+							"val numFiles = 1000"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Data preparation"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": true
+						},
+						"source": [
+							"spark.range(50000000).map { _ =>\r\n",
+							"    (scala.util.Random.nextInt(10000000).toLong, scala.util.Random.nextInt(1000000000), scala.util.Random.nextInt(2))\r\n",
+							"}.toDF(\"colA\", \"colB\", \"colC\").repartition(numFiles).write.mode(\"overwrite\").format(\"delta\").partitionBy(\"colC\").save(dataPath)\r\n",
+							"\r\n",
+							"// 50M rows with random integers stored in numFiles * 2 parquet files in colC=0, colC=1 partition"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"// spark.conf.get(\"spark.databricks.delta.optimize.maxFileSize\")\r\n",
+							"spark.conf.get(\"spark.executor.instances\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Optimize dataset\r\n",
+							"\r\n",
+							"Optimize will compact small target files into larger files.\r\n",
+							"Target files are\r\n",
+							"- smaller than `spark.databricks.delta.optimize.maxFileSize` (default 1GB) AND\r\n",
+							"- under the corresponding partitions if partition filter condition is specified.\r\n",
+							"\r\n",
+							"Optimize won't optimize the target files if\r\n",
+							"- only one file in the partition\r\n",
+							"- no candidate for compaction e.g. 2 files of 700MB & maxFileSize=1GB\r\n",
+							""
+						]
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"val dt = io.delta.tables.DeltaTable.forPath(dataPath)\r\n",
+							"\r\n",
+							"// optimize API supports filter condition for partitioned columns. Below will optimize the files under \"colC=1\" only.\r\n",
+							"dt.optimize(\"colC = 1\").show\r\n",
+							"// optimize API returns statistics in Dataframe"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"// optimize all files\r\n",
+							"dt.optimize().show"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Check performance without optimize"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": true
+						},
+						"source": [
+							"def measure(f : => Unit) {\r\n",
+							"    val start = System.nanoTime\r\n",
+							"    f\r\n",
+							"    val durationInMS = (System.nanoTime - start) / 1000 / 1000\r\n",
+							"    println(\"duration(ms): \" + durationInMS )\r\n",
+							"}"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": true
+						},
+						"source": [
+							"// Use version 0 for non-optimized data\r\n",
+							"val df = spark.read.format(\"delta\").option(\"versionAsOf\", \"0\").load(dataPath)\r\n",
+							"val agg = df.agg(avg(\"colA\"))\r\n",
+							"measure(println(agg.collect))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Check performance after optimize"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": true
+						},
+						"source": [
+							"// Use the latest version for optimized data\r\n",
+							"val df = spark.read.format(\"delta\").load(dataPath)\r\n",
+							"val agg = df.agg(avg(\"colA\"))\r\n",
+							"measure(println(agg.collect))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Spark SQL support\r\n",
+							"\r\n",
+							"Note: partition filter condition does not support in Spark SQL yet."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"// This won't optimize anything since the table is already optimized.\r\n",
+							"spark.sql(s\"OPTIMIZE delta.`$dataPath`\").show"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### zOrder - Example"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.sql(s\"OPTIMIZE delta.`$dataPath` ZORDER BY (ColA)\").show"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Temp Area"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"from delta.tables import *\r\n",
+							"dt = DeltaTable.forPath(spark, '/deltaoptimizetest/data-246486')\r\n",
+							"display(dt.optimize(condition = \"colC = 1\"))\r\n",
+							"\r\n",
+							"# display(dt.optimize(condition = \"colC = 1\", zOrderBy = \"colA\"))\r\n",
+							"# help(dt.optimize)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.sql(s\"CREATE TABLE sampledata USING DELTA LOCATION '$dataPath'\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"OPTIMIZE sampledata ZORDER BY (ColA)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LibraryManagement')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "TIP"
+				},
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b5530a8f-defd-4f9a-9770-3524754efa3b"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					}
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Library deployment from public repo"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import pkg_resources\r\n",
+							"\r\n",
+							"for d in pkg_resources.working_set:\r\n",
+							"    print(d)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import fuzzywuzzy\r\n",
+							"print(fuzzywuzzy.__version__)\r\n",
+							"print(fuzzywuzzy.__path__)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import numpy\r\n",
+							"print(numpy.__version__)\r\n",
+							"print(numpy.__path__)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import glob\r\n",
+							"\r\n",
+							"for f in glob.iglob('/usr/lib/library-manager/**/*.jar', recursive = True):\r\n",
+							"    print(f)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Session level library deployment"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# %%configure -f\r\n",
+							"# {\r\n",
+							"#     \"conf\":\r\n",
+							"#     {\r\n",
+							"#         \"spark.jars\": \"abfss://container@storage.dfs.core.windows.net/lib/spark-sql-kafka-0-10_2.12-3.1.1.jar, abfss://container@storage.dfs.core.windows.net/lib/spark-streaming-kafka_2.11-1.6.3.jar\"\r\n",
+							"#     }\r\n",
+							"# }        "
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"# https://mvnrepository.com/artifact/com.microsoft.azure/azure-cosmosdb-spark_2.3.0_2.11/1.3.3\r\n",
+							"# <!-- https://mvnrepository.com/artifact/com.microsoft.azure/azure-cosmosdb-spark_2.3.0 -->\r\n",
+							"# <dependency>\r\n",
+							"#     <groupId>com.microsoft.azure</groupId>\r\n",
+							"#     <artifactId>azure-cosmosdb-spark_2.3.0_2.11</artifactId>\r\n",
+							"#     <version>1.3.3</version>\r\n",
+							"# </dependency>"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"%%configure -f \r\n",
+							"{ \r\n",
+							"    \"conf\": \r\n",
+							"    {\r\n",
+							"        \"spark.jars.packages\": \"com.microsoft.azure:azure-cosmosdb-spark_2.3.0_2.11:1.3.3\"\r\n",
+							"    }\r\n",
+							"}"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"%%configure -f \r\n",
+							"{\r\n",
+							"    \"spark.synapse.library.python.env\": \"name: env\\r\\nchannels:\\r\\n- anaconda\\r\\n- conda-forge\\r\\ndependencies:\\r\\n- pip:\\r\\n  - numpy\\r\\n\"\r\n",
+							"}"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Python - Custom Library"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import pythoncalc.simplecalc.functions\r\n",
+							"help(pythoncalc.simplecalc.functions)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from pythoncalc.simplecalc.functions import *\r\n",
+							"print(doublenum(10))\r\n",
+							"print(squarenum(10))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Scala - Custom Library"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"%%configure -f\r\n",
+							"{\r\n",
+							"    \"conf\":\r\n",
+							"    {\r\n",
+							"        \"spark.jars\": \"abfss://synapseintellplat@synapseintellplat.dfs.core.windows.net/library/scalapkgexample_2.12-0.1.jar\"\r\n",
+							"    }\r\n",
+							"}    "
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"import scalapkgexample.scalacalc.simplecalc.Functions._\r\n",
+							"\r\n",
+							"doublenum(10)\r\n",
+							"squarenum(10)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"import org.apache.spark.SparkContext\r\n",
+							"val sc = SparkContext.getOrCreate()\r\n",
+							"val sourceRDD = sc.textFile(\"/data/textdata.txt\")\r\n",
+							"sourceRDD.take(num = 10).foreach(println)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"import scalapkgexample.scalacalc.simplecalc.ProcessData._\r\n",
+							"processTextData(\"/data/textdata.txt\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.conf.set(\"spark.sql.legacy.timeParserPolicy\", \"LEGACY\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "scala"
+							}
+						},
+						"source": [
+							"%%spark\r\n",
+							"import scalapkgexample.scalacalc.simplecalc.DateDimension\r\n",
+							"\r\n",
+							"val dateDim = new DateDimension().createDataFrame()\r\n",
+							"dateDim.write.mode(\"overwrite\").saveAsTable(\"DimDate\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"show TABLES"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"select * from default.dimdate limit 100"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import glob\r\n",
+							"\r\n",
+							"for f in glob.iglob('/mnt/var/hadoop/**/scalapkgexample_2.12-0.1.jar', recursive = True):\r\n",
+							"    print(f)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Temp Area"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# import glob\r\n",
+							"\r\n",
+							"# for f in glob.iglob('/usr/lib/library-manager/**/*.jar', recursive = True):\r\n",
+							"#     print(f)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# %%configure -f\r\n",
+							"# {\r\n",
+							"#     \"conf\":\r\n",
+							"#     {\r\n",
+							"#         \"spark.jars\": \"abfss://synapseintellplat@synapseintellplat.dfs.core.windows.net/library/scalapkgexample_2.12-0.1.jar\"\r\n",
+							"#     }\r\n",
+							"# }    "
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/MultipleLoadDataFrame')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
@@ -1850,7 +4338,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "78ab1119-16c8-44ce-8b60-4546aa9d379e"
+						"spark.autotune.trackingId": "464fdf56-e9fd-4088-8999-f58711560769"
 					}
 				},
 				"metadata": {
@@ -1875,10 +4363,8 @@
 						"sparkVersion": "2.4",
 						"nodeCount": 5,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
-					},
-					"sessionKeepAliveTimeout": 30
+						"memory": 28
+					}
 				},
 				"cells": [
 					{
@@ -2190,15 +4676,6 @@
 			"type": "Microsoft.Synapse/workspaces/managedVirtualNetworks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ws1sparkpool1')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": []
-			},
 			"dependsOn": []
 		}
 	]
