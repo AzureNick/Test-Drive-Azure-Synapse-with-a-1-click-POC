@@ -21,7 +21,7 @@
 						"type": "NotebookReference"
 					},
 					"parameters": {
-						"TableName": {
+						"sourcePath": {
 							"value": "promotion",
 							"type": "string"
 						}
