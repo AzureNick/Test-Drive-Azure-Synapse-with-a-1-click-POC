@@ -22,7 +22,7 @@
 					},
 					"parameters": {
 						"TableName": {
-							"value": "faketalbe",
+							"value": "promotion",
 							"type": "string"
 						}
 					},
