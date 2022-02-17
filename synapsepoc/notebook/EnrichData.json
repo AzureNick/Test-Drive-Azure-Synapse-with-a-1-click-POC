@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "23af5d70-a481-483f-9d53-4b3574469d39"
+				"spark.autotune.trackingId": "5e9f2577-f8d6-475c-b529-e187c13da81e"
 			}
 		},
 		"metadata": {
@@ -84,6 +84,25 @@
 					]
 				},
 				"source": [
+					"tableName = 'fakeTableName'"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": []
+				},
+				"source": [
 					"from pyspark.sql import SparkSession\r\n",
 					"from pyspark.sql.types import *\r\n",
 					"import datetime\r\n",
@@ -98,7 +117,7 @@
 					"containerSourceName='raw'\r\n",
 					"continerDestName='enriched'\r\n",
 					"\r\n",
-					"tableName = 'fakeTableName'\r\n",
+					"\r\n",
 					"sourcePath = tableName\r\n",
 					"destPath=tableName + '/' + strFolder"
 				],
