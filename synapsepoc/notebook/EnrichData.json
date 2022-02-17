@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0adfc49c-8589-4594-aec2-65ef8f825535"
+				"spark.autotune.trackingId": "3aeaa800-970d-45e1-8c33-3aefdb723236"
 			}
 		},
 		"metadata": {
@@ -84,9 +84,9 @@
 					]
 				},
 				"source": [
-					"tableName = 'fakeTableName'"
+					"tableName = 'call_center'"
 				],
-				"execution_count": null
+				"execution_count": 63
 			},
 			{
 				"cell_type": "code",
@@ -99,7 +99,12 @@
 					"import datetime\r\n",
 					"\r\n",
 					"objDate = datetime.datetime.now()\r\n",
-					"strFolder = objDate.strftime(\"%Y\") + \"_\" + objDate.strftime(\"%m\") + \"_\" + objDate.strftime(\"%d\")\r\n",
+					"year = objDate.strftime(\"%Y\")\r\n",
+					"month = objDate.strftime(\"%m\")\r\n",
+					"day = objDate.strftime(\"%d\")\r\n",
+					"\r\n",
+					"#strFolder = year + \"_\" + month + \"_\" + day\r\n",
+					"strFolder = year + \"/\" + month + \"/\" + day\r\n",
 					"\r\n",
 					"# Storage Info\r\n",
 					"accountName='synapsetiphackathonadls'\r\n",
@@ -126,9 +131,9 @@
 					"print(df_csv2.count(), \"After removed dupes\")\r\n",
 					"\r\n",
 					"df_csv_coalesced = df_csv2.coalesce(1)\r\n",
-					"df_csv_coalesced.write.mode(\"append\").parquet(adls_dest_path)"
+					"df_csv_coalesced.write.mode(\"append\").partitionBy(year,month,day).parquet(adls_dest_path)"
 				],
-				"execution_count": 59
+				"execution_count": null
 			}
 		]
 	}
