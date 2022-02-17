@@ -17,10 +17,19 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "MultipleLoadDataFrame",
+						"referenceName": "EnrichData",
 						"type": "NotebookReference"
 					},
-					"snapshot": true
+					"parameters": {
+						"TableName": {
+							"value": "call_center"
+						}
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "ws1sparkpool1",
+						"type": "BigDataPoolReference"
+					}
 				}
 			}
 		],

@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "1384e818-f633-4f17-b212-ad1e538e7b18"
+				"spark.autotune.trackingId": "12b4d3da-416f-4cfa-9d8b-2dee58c4fb61"
 			}
 		},
 		"metadata": {
@@ -99,7 +99,7 @@
 					"df_csv2 = df_csv1.dropDuplicates()\r\n",
 					"print(df_csv2.count(), \"After removed dupes\")"
 				],
-				"execution_count": 18
+				"execution_count": 19
 			}
 		]
 	}
