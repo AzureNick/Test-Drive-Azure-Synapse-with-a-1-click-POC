@@ -4799,7 +4799,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "36409626-3969-4771-9eb1-9113caffb680"
+						"spark.autotune.trackingId": "88667d6c-6c16-4543-a057-00ac5b847cc1"
 					}
 				},
 				"metadata": {
@@ -4863,26 +4863,10 @@
 							]
 						},
 						"source": [
-							"from pyspark.sql import SparkSession\r\n",
-							"from pyspark.sql.types import *\r\n",
-							"import datetime\r\n",
-							"\r\n",
-							"objDate = datetime.datetime.now()\r\n",
-							"strFolder = objDate.strftime(\"%Y\") + \"_\" + objDate.strftime(\"%m\") + \"_\" + objDate.strftime(\"%d\")\r\n",
-							"\r\n",
-							"\r\n",
-							"\r\n",
-							"# Storage Info\r\n",
-							"accountName='synapsetiphackathonadls'\r\n",
-							"containerSourceName='raw'\r\n",
-							"continerDestName='enriched'\r\n",
-							"\r\n",
-							"tableName = 'fakeTableName'\r\n",
-							"sourcePath = tableName\r\n",
-							"destPath=tableName + '/' + strFolder"
+							"tableName = 'fakeTableName'"
 						],
 						"outputs": [],
-						"execution_count": 58
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -4893,6 +4877,17 @@
 							"from pyspark.sql import SparkSession\r\n",
 							"from pyspark.sql.types import *\r\n",
 							"import datetime\r\n",
+							"\r\n",
+							"objDate = datetime.datetime.now()\r\n",
+							"strFolder = objDate.strftime(\"%Y\") + \"_\" + objDate.strftime(\"%m\") + \"_\" + objDate.strftime(\"%d\")\r\n",
+							"\r\n",
+							"# Storage Info\r\n",
+							"accountName='synapsetiphackathonadls'\r\n",
+							"containerSourceName='raw'\r\n",
+							"continerDestName='enriched'\r\n",
+							"\r\n",
+							"sourcePath = tableName\r\n",
+							"destPath=tableName + '/' + strFolder\r\n",
 							"\r\n",
 							"print('table: ' + sourcePath)\r\n",
 							"adls_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (containerSourceName, accountName, sourcePath)\r\n",
