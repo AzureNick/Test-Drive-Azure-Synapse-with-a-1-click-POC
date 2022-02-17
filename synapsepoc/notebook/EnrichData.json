@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "74ac274a-b56d-4e97-b2cc-3c71ef4c9ac2"
+				"spark.autotune.trackingId": "1eb52f23-aea0-4ecf-a72c-dd4d33c07636"
 			}
 		},
 		"metadata": {
@@ -98,7 +98,7 @@
 					"containerSourceName='raw'\r\n",
 					"continerDestName='enriched'\r\n",
 					"\r\n",
-					"tableName = 'promotion'\r\n",
+					"tableName = ''\r\n",
 					"sourcePath = tableName\r\n",
 					"destPath=tableName + '/' + strFolder"
 				],
