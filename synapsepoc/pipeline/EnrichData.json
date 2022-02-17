@@ -50,7 +50,7 @@
 					},
 					"activities": [
 						{
-							"name": "EnrichDataPipeline_copy1",
+							"name": "EnrichDataPipeline",
 							"type": "SynapseNotebook",
 							"dependsOn": [],
 							"policy": {
