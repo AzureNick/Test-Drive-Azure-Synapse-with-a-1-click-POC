@@ -1,7 +1,6 @@
 {
-	"name": "Load Dataframe a bunch",
+	"name": "EnrichData",
 	"properties": {
-		"description": "Just to generate a little load for monitoring",
 		"activities": [
 			{
 				"name": "EnrichDataPipeline",
