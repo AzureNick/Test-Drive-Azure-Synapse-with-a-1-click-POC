@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "GetTableNames",
+				"name": "GetFolderNames",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -36,7 +36,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "GetTableNames",
+						"activity": "GetFolderNames",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetTableNames').output.childItems",
+						"value": "@activity('GetFolderNames').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
@@ -69,7 +69,7 @@
 								"parameters": {
 									"tableName": {
 										"value": {
-											"value": "@activity('GetTableNames').output.childItems",
+											"value": "@activity('GetFolderNames').output.childItems",
 											"type": "Expression"
 										},
 										"type": "string"
