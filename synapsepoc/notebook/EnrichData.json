@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "2083cb55-ab5b-4ec8-b8b5-6a2b817c4d8e"
+				"spark.autotune.trackingId": "58842986-d418-469a-b46b-9446da6a1f75"
 			}
 		},
 		"metadata": {
@@ -105,7 +105,7 @@
 					"accountName='synapsetiphackathonadls'\r\n",
 					"containerSourceName='raw'\r\n",
 					"continerDestName='enriched'\r\n",
-					"sourcePath='item/'\r\n",
+					"#sourcePath='item/'\r\n",
 					"#sourcePath='call_center/'\r\n",
 					"\r\n",
 					"destPath='call_center/' + strFolder\r\n",
