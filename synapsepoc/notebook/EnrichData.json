@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0fecb75f-44c5-4708-a307-7005e07ee17e"
+				"spark.autotune.trackingId": "318cf977-29f3-4bf9-821b-74481f11f4d6"
 			}
 		},
 		"metadata": {
@@ -84,9 +84,9 @@
 					]
 				},
 				"source": [
-					"sourcepath=''"
+					"sourcepath='catalog_page'"
 				],
-				"execution_count": 24
+				"execution_count": 26
 			},
 			{
 				"cell_type": "code",
@@ -105,7 +105,7 @@
 					"accountName='synapsetiphackathonadls'\r\n",
 					"containerSourceName='raw'\r\n",
 					"continerDestName='enriched'\r\n",
-					"#sourcepath=''\r\n",
+					"sourcepath='catalog_page'\r\n",
 					"#sourcePath='call_center/'\r\n",
 					"destPath='call_center/' + strFolder\r\n",
 					"\r\n",
@@ -124,7 +124,7 @@
 					"df_csv2 = df_csv1.dropDuplicates()\r\n",
 					"print(df_csv2.count(), \"After removed dupes\")"
 				],
-				"execution_count": 25
+				"execution_count": 28
 			}
 		]
 	}

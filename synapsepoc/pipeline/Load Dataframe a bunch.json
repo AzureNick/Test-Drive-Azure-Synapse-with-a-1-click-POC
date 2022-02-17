@@ -22,7 +22,7 @@
 					},
 					"parameters": {
 						"TableName": {
-							"value": "call_center",
+							"value": "catalog_page",
 							"type": "string"
 						}
 					},
