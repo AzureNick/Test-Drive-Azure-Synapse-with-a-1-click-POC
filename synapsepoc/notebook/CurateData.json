@@ -13,7 +13,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "09e4954c-604e-4a6f-9a7c-c567e070b931"
+				"spark.autotune.trackingId": "f932393f-5aa4-4373-8ba4-67f317628fc1"
 			}
 		},
 		"metadata": {
@@ -69,13 +69,12 @@
 					"from pyspark.sql.types import *\r\n",
 					"import datetime\r\n",
 					"\r\n",
-					"\r\n",
+					"#Get today's date\r\n",
 					"objDate = datetime.datetime.now()\r\n",
 					"year = objDate.strftime(\"%Y\")\r\n",
 					"month = objDate.strftime(\"%m\")\r\n",
 					"day = objDate.strftime(\"%d\")\r\n",
 					"\r\n",
-					"#strFolder = year + \"_\" + month + \"_\" + day\r\n",
 					"strFolder = year + \"/\" + month + \"/\" + day\r\n",
 					"\r\n",
 					"# Storage Info\r\n",
@@ -83,7 +82,7 @@
 					"containerSourceName='enriched'\r\n",
 					"continerDestName='curated'\r\n",
 					"\r\n",
-					"sourcePath = tableName\r\n",
+					"sourcePath = tableName '/' + strFolder\r\n",
 					"destPath=tableName + '/' + strFolder\r\n",
 					"\r\n",
 					"print('table: ' + sourcePath)\r\n",
@@ -96,7 +95,17 @@
 					"df = spark.read.parquet(adls_path)\r\n",
 					"print(df.count(), ' Total Records')\r\n",
 					"\r\n",
+					"if not path.exists(adls_dest_path):\r\n",
+					"    df.write.format(\"delta\").mode(\"append\").save(adls_dest_path)\r\n",
+					"else:\r\n",
+					"    df_delta = DeltaTable.forpath(spark, adls_dest_path)\r\n",
 					"\r\n",
+					"    df_delta.alias(tableName).merge(\r\n",
+					"        df.alias(\"updates\"),\r\n",
+					"        tableName + \"._c0 = updates.C0\") \\\r\n",
+					"        .whenMatchedUpdateAll() \\\r\n",
+					"        .whenNotMatchedInsertAll() \\\r\n",
+					"        .execute()\r\n",
 					""
 				],
 				"execution_count": null
