@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "8e72da04-36b5-4aa3-a07b-0ad7e561bf48"
+				"spark.autotune.trackingId": "74ac274a-b56d-4e97-b2cc-3c71ef4c9ac2"
 			}
 		},
 		"metadata": {
@@ -84,9 +84,25 @@
 					]
 				},
 				"source": [
-					"sourcePath = 'call_center'"
+					"from pyspark.sql import SparkSession\r\n",
+					"from pyspark.sql.types import *\r\n",
+					"import datetime\r\n",
+					"\r\n",
+					"objDate = datetime.datetime.now()\r\n",
+					"strFolder = objDate.strftime(\"%Y\") + \"_\" + objDate.strftime(\"%m\") + \"_\" + objDate.strftime(\"%d\")\r\n",
+					"\r\n",
+					"\r\n",
+					"\r\n",
+					"# Storage Info\r\n",
+					"accountName='synapsetiphackathonadls'\r\n",
+					"containerSourceName='raw'\r\n",
+					"continerDestName='enriched'\r\n",
+					"\r\n",
+					"tableName = 'promotion'\r\n",
+					"sourcePath = tableName\r\n",
+					"destPath=tableName + '/' + strFolder"
 				],
-				"execution_count": null
+				"execution_count": 58
 			},
 			{
 				"cell_type": "code",
@@ -98,21 +114,10 @@
 					"from pyspark.sql.types import *\r\n",
 					"import datetime\r\n",
 					"\r\n",
-					"objDate = datetime.datetime.now()\r\n",
-					"strFolder = objDate.strftime(\"%Y\") + \"_\" + objDate.strftime(\"%m\") + \"_\" + objDate.strftime(\"%d\")\r\n",
-					"\r\n",
-					"# Storage Info\r\n",
-					"accountName='synapsetiphackathonadls'\r\n",
-					"containerSourceName='raw'\r\n",
-					"continerDestName='enriched'\r\n",
-					"#sourcePath='item/'\r\n",
-					"#sourcePath='call_center/'\r\n",
-					"\r\n",
-					"destPath='call_center/' + strFolder\r\n",
-					"print(sourcePath)\r\n",
+					"print('table: ' + sourcePath)\r\n",
 					"adls_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (containerSourceName, accountName, sourcePath)\r\n",
 					"print('Source path: ' + adls_path)\r\n",
-					"adls_dest_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (containerSourceName, accountName, destPath)\r\n",
+					"adls_dest_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (continerDestName, accountName, destPath)\r\n",
 					"print('Dest path: ' + adls_dest_path)\r\n",
 					"\r\n",
 					"#read raw data as CSV\r\n",
@@ -123,9 +128,12 @@
 					"print(df_csv1.count(), \"After replaced Nulls\")\r\n",
 					"\r\n",
 					"df_csv2 = df_csv1.dropDuplicates()\r\n",
-					"print(df_csv2.count(), \"After removed dupes\")"
+					"print(df_csv2.count(), \"After removed dupes\")\r\n",
+					"\r\n",
+					"df_csv_coalesced = df_csv2.coalesce(1)\r\n",
+					"df_csv_coalesced.write.mode(\"append\").parquet(adls_dest_path)"
 				],
-				"execution_count": 43
+				"execution_count": 59
 			}
 		]
 	}
