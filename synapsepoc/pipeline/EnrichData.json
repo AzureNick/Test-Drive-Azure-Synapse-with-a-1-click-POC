@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetFolderNames').output.childItems",
+						"value": "@activity('GetFolderNames').output.itemName",
 						"type": "Expression"
 					},
 					"activities": [
@@ -69,7 +69,7 @@
 								"parameters": {
 									"tableName": {
 										"value": {
-											"value": "@activity('GetFolderNames').output.childItems",
+											"value": "@activity('GetFolderNames').output.itemName",
 											"type": "Expression"
 										},
 										"type": "string"
