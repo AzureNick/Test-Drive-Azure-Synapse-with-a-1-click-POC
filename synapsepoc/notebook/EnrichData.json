@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "b79fb308-5b0d-4974-a9c1-885986c8dffd"
+				"spark.autotune.trackingId": "6a8dbfa5-4ecc-40a4-891f-5d748228d156"
 			}
 		},
 		"metadata": {
@@ -86,7 +86,7 @@
 				"source": [
 					"tableName = 'call_center'"
 				],
-				"execution_count": 77
+				"execution_count": 83
 			},
 			{
 				"cell_type": "code",
@@ -136,10 +136,10 @@
 					"dfWithDate.printSchema()\r\n",
 					"dfWithDate.limit(1).show(truncate=False)\r\n",
 					"\r\n",
-					"#dfWithDate = df_csv2.coalesce(1)\r\n",
-					"dfWithDate.write.mode(\"append\").partitionBy(\"InsertDate\").parquet(adls_dest_path)"
+					"dfWithDate_coalesce = dfWithDate.coalesce(1)\r\n",
+					"dfWithDate_coalesce.write.mode(\"append\").partitionBy(\"InsertDate\").parquet(adls_dest_path)"
 				],
-				"execution_count": 78
+				"execution_count": 84
 			}
 		]
 	}
