@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "6a8dbfa5-4ecc-40a4-891f-5d748228d156"
+				"spark.autotune.trackingId": "12910359-cc1a-4181-84a9-84c90fde3cca"
 			}
 		},
 		"metadata": {
@@ -86,7 +86,7 @@
 				"source": [
 					"tableName = 'call_center'"
 				],
-				"execution_count": 83
+				"execution_count": 85
 			},
 			{
 				"cell_type": "code",
@@ -133,13 +133,13 @@
 					"print(df_csv2.count(), \"After removed dupes\")\r\n",
 					"\r\n",
 					"dfWithDate = df_csv2.withColumn(\"InsertDate\", F.current_date())\r\n",
-					"dfWithDate.printSchema()\r\n",
-					"dfWithDate.limit(1).show(truncate=False)\r\n",
+					"#dfWithDate.printSchema()\r\n",
+					"#dfWithDate.limit(1).show(truncate=False)\r\n",
 					"\r\n",
 					"dfWithDate_coalesce = dfWithDate.coalesce(1)\r\n",
 					"dfWithDate_coalesce.write.mode(\"append\").partitionBy(\"InsertDate\").parquet(adls_dest_path)"
 				],
-				"execution_count": 84
+				"execution_count": 86
 			}
 		]
 	}
