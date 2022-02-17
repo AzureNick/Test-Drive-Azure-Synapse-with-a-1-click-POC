@@ -22,7 +22,8 @@
 					},
 					"parameters": {
 						"TableName": {
-							"value": "call_center"
+							"value": "call_center",
+							"type": "string"
 						}
 					},
 					"snapshot": true,
