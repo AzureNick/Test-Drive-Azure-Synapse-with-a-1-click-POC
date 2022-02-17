@@ -4799,7 +4799,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "996e1a6c-5b1a-446e-814f-04dbc244b3db"
+						"spark.autotune.trackingId": "36409626-3969-4771-9eb1-9113caffb680"
 					}
 				},
 				"metadata": {
@@ -4877,7 +4877,7 @@
 							"containerSourceName='raw'\r\n",
 							"continerDestName='enriched'\r\n",
 							"\r\n",
-							"tableName = ''\r\n",
+							"tableName = 'fakeTableName'\r\n",
 							"sourcePath = tableName\r\n",
 							"destPath=tableName + '/' + strFolder"
 						],
