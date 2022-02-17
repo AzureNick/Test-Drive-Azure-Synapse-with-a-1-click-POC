@@ -1,15 +1,8 @@
 {
-	"name": "EnrichData",
+	"name": "CurateData",
 	"properties": {
-		"folder": {
-			"name": "TIP"
-		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
-		"bigDataPool": {
-			"referenceName": "ws1sparkpool1",
-			"type": "BigDataPoolReference"
-		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -20,7 +13,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "28c78f54-4a14-447a-bf44-54fad4aea0a9"
+				"spark.autotune.trackingId": "09e4954c-604e-4a6f-9a7c-c567e070b931"
 			}
 		},
 		"metadata": {
@@ -28,29 +21,21 @@
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
-				"display_name": "Synapse PySpark"
+				"display_name": "python"
 			},
 			"language_info": {
 				"name": "python"
 			},
-			"a365ComputeOptions": {
-				"id": "/subscriptions/9cd45dfd-d1ac-4c16-9363-150d2afcb462/resourceGroups/ContosoProd/providers/Microsoft.Synapse/workspaces/conktovskdzc75xepocws1/bigDataPools/ws1sparkpool1",
-				"name": "ws1sparkpool1",
-				"type": "Spark",
-				"endpoint": "https://conktovskdzc75xepocws1.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/ws1sparkpool1",
-				"auth": {
-					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net"
-				},
-				"sparkVersion": "2.4",
-				"nodeCount": 3,
-				"cores": 4,
-				"memory": 28,
-				"automaticScaleJobs": false
-			},
 			"sessionKeepAliveTimeout": 30
 		},
 		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"tableName = 'call_center'"
+				],
+				"execution_count": null
+			},
 			{
 				"cell_type": "markdown",
 				"metadata": {
@@ -61,10 +46,8 @@
 					}
 				},
 				"source": [
-					"1. Read data from raw as csv\r\n",
-					"2. remove duplicates\r\n",
-					"3. remove nulls\r\n",
-					"4. write back to enriched as parquet"
+					"1. read from enriched zone\r\n",
+					"2. merge today's data into delta lake tables"
 				]
 			},
 			{
@@ -78,20 +61,7 @@
 						"transient": {
 							"deleting": false
 						}
-					},
-					"tags": [
-						"parameters"
-					]
-				},
-				"source": [
-					"tableName = 'call_center'"
-				],
-				"execution_count": 85
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"tags": []
+					}
 				},
 				"source": [
 					"from pyspark.sql import SparkSession\r\n",
@@ -110,8 +80,8 @@
 					"\r\n",
 					"# Storage Info\r\n",
 					"accountName='synapsetiphackathonadls'\r\n",
-					"containerSourceName='raw'\r\n",
-					"continerDestName='enriched'\r\n",
+					"containerSourceName='enriched'\r\n",
+					"continerDestName='curated'\r\n",
 					"\r\n",
 					"sourcePath = tableName\r\n",
 					"destPath=tableName + '/' + strFolder\r\n",
@@ -122,24 +92,14 @@
 					"adls_dest_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (continerDestName, accountName, destPath)\r\n",
 					"print('Dest path: ' + adls_dest_path)\r\n",
 					"\r\n",
-					"#read raw data as CSV\r\n",
-					"df_csv = spark.read.option(\"delimiter\",\"|\").csv(adls_path, header=False)\r\n",
-					"print(df_csv.count(), \"Records\")\r\n",
+					"#read parquet files\r\n",
+					"df = spark.read.parquet(adls_path)\r\n",
+					"print(df.count(), ' Total Records')\r\n",
 					"\r\n",
-					"df_csv1 = df_csv.fillna('')\r\n",
-					"print(df_csv1.count(), \"After replaced Nulls\")\r\n",
 					"\r\n",
-					"df_csv2 = df_csv1.dropDuplicates()\r\n",
-					"print(df_csv2.count(), \"After removed dupes\")\r\n",
-					"\r\n",
-					"dfWithDate = df_csv2.withColumn(\"InsertDate\", F.current_date())\r\n",
-					"#dfWithDate.printSchema()\r\n",
-					"#dfWithDate.limit(1).show(truncate=False)\r\n",
-					"\r\n",
-					"dfWithDate_coalesce = dfWithDate.coalesce(1)\r\n",
-					"dfWithDate_coalesce.write.mode(\"append\").partitionBy(\"InsertDate\").parquet(adls_dest_path)"
+					""
 				],
-				"execution_count": 86
+				"execution_count": null
 			}
 		]
 	}
