@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "3aeaa800-970d-45e1-8c33-3aefdb723236"
+				"spark.autotune.trackingId": "b79fb308-5b0d-4974-a9c1-885986c8dffd"
 			}
 		},
 		"metadata": {
@@ -86,7 +86,7 @@
 				"source": [
 					"tableName = 'call_center'"
 				],
-				"execution_count": 63
+				"execution_count": 77
 			},
 			{
 				"cell_type": "code",
@@ -95,8 +95,10 @@
 				},
 				"source": [
 					"from pyspark.sql import SparkSession\r\n",
+					"from pyspark.sql import functions as F\r\n",
 					"from pyspark.sql.types import *\r\n",
 					"import datetime\r\n",
+					"\r\n",
 					"\r\n",
 					"objDate = datetime.datetime.now()\r\n",
 					"year = objDate.strftime(\"%Y\")\r\n",
@@ -130,10 +132,14 @@
 					"df_csv2 = df_csv1.dropDuplicates()\r\n",
 					"print(df_csv2.count(), \"After removed dupes\")\r\n",
 					"\r\n",
-					"df_csv_coalesced = df_csv2.coalesce(1)\r\n",
-					"df_csv_coalesced.write.mode(\"append\").partitionBy(year,month,day).parquet(adls_dest_path)"
+					"dfWithDate = df_csv2.withColumn(\"InsertDate\", F.current_date())\r\n",
+					"dfWithDate.printSchema()\r\n",
+					"dfWithDate.limit(1).show(truncate=False)\r\n",
+					"\r\n",
+					"#dfWithDate = df_csv2.coalesce(1)\r\n",
+					"dfWithDate.write.mode(\"append\").partitionBy(\"InsertDate\").parquet(adls_dest_path)"
 				],
-				"execution_count": null
+				"execution_count": 78
 			}
 		]
 	}
