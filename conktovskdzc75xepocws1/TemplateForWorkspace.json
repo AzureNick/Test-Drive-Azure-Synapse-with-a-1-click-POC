@@ -4799,7 +4799,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "a77aa2a4-a797-4b7c-a639-d656fae67afb"
+						"spark.autotune.trackingId": "c8f5b966-ed12-4494-a798-570ee62fe5c9"
 					}
 				},
 				"metadata": {
@@ -4985,7 +4985,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('GetFolderNames').output.itemName",
+								"value": "@activity('GetFolderNames').output.childItems",
 								"type": "Expression"
 							},
 							"activities": [
@@ -5009,7 +5009,7 @@
 										"parameters": {
 											"tableName": {
 												"value": {
-													"value": "@activity('GetFolderNames').output.itemName",
+													"value": "@item().Name",
 													"type": "Expression"
 												},
 												"type": "string"
