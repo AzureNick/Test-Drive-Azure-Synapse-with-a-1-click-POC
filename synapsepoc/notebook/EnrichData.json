@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "318cf977-29f3-4bf9-821b-74481f11f4d6"
+				"spark.autotune.trackingId": "1da30658-13ea-4cb0-b1d2-ad562ab98693"
 			}
 		},
 		"metadata": {
@@ -84,9 +84,9 @@
 					]
 				},
 				"source": [
-					"sourcepath='catalog_page'"
+					"sourcepath"
 				],
-				"execution_count": 26
+				"execution_count": 40
 			},
 			{
 				"cell_type": "code",
@@ -105,10 +105,11 @@
 					"accountName='synapsetiphackathonadls'\r\n",
 					"containerSourceName='raw'\r\n",
 					"continerDestName='enriched'\r\n",
-					"sourcepath='catalog_page'\r\n",
+					"#sourcePath=''\r\n",
 					"#sourcePath='call_center/'\r\n",
-					"destPath='call_center/' + strFolder\r\n",
 					"\r\n",
+					"destPath='call_center/' + strFolder\r\n",
+					"print(sourcepath)\r\n",
 					"adls_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (containerSourceName, accountName, sourcePath)\r\n",
 					"print('Source path: ' + adls_path)\r\n",
 					"adls_dest_path = 'abfss://%s@%s.dfs.core.windows.net/%s' % (containerSourceName, accountName, destPath)\r\n",
@@ -124,7 +125,7 @@
 					"df_csv2 = df_csv1.dropDuplicates()\r\n",
 					"print(df_csv2.count(), \"After removed dupes\")"
 				],
-				"execution_count": 28
+				"execution_count": 38
 			}
 		]
 	}

@@ -22,7 +22,7 @@
 					},
 					"parameters": {
 						"TableName": {
-							"value": "catalog_page",
+							"value": "faketalbe",
 							"type": "string"
 						}
 					},
